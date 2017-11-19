@@ -190,3 +190,39 @@ _SetLocalizationLanguage = driver_SetLocalizationLanguage
 
 TGadget.LocalizeString = LocalizeString
 TGadget.DelocalizeGadget = DelocalizeGadget
+
+Rem
+bbdoc: Add in one batch, many items to a gadget
+about: with this command you can add many items to a gadget (like listbox or combobox) passing them in an array, a list or a map (key values are considered)
+@sel parameter indicates what item is 'selected'
+End Rem
+Function AddGadgetItems:Int(gadget:tgadget,obj:Object=Null,sel:Int=-1)
+	If gadget=Null Return -1
+	If obj=Null Return -1
+	
+	Local tmp:Object
+	
+	If obj=String[](obj)
+		For Local s:String=EachIn String[](obj)
+		'gadget.ItemCount(),Text,tip,icon,extra,flags)
+			gadget.InsertItem(gadget.ItemCount(),s,s,-1,Null,0)
+		Next
+	End If
+	
+	If obj=TList(obj)
+		For Local s:String=EachIn TList(obj)
+		gadget.InsertItem(gadget.ItemCount(),s,s,-1,Null,0)		
+		Next
+	End If
+	
+	If obj=tmap(obj)
+			For Local s:String=EachIn MapKeys(tmap(obj))
+			tmp=MapValueForKey(tmap(obj),s)
+			gadget.InsertItem(gadget.ItemCount(),s,s,-1,tmp,0)
+			Next
+	End If
+	If sel<>-1
+		gadget.SelectItem(sel,1)
+
+	End If
+End Function
