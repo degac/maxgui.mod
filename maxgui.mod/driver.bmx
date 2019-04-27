@@ -5,6 +5,7 @@ Import "guifont.bmx"
 
 Import MaxGUI.Localization
 Import Brl.Map
+Import brl.reflection	'required for AddGadgetItems()
 
 Type TMaxGUIDriver
 	
@@ -163,6 +164,66 @@ Type TMaxGUIDriver
 End Type
 
 Global maxgui_driver:TMaxGUIDriver
+
+'added functions
+Rem
+bbdoc: Add in one batch, many items to a gadget
+about: with this command you can add many items to a gadget (like listbox or combobox) passing them in an array, a list or a map (key values are considered)
+
+[ @Parameter |  @Description
+* gadget | The gadget you want to add items to (ie: ListBox, ComboBox)
+* obj | the 'container' object (Array, List or Map)
+* sel | the item (number from 0 to N-1) to be 'selected' in the gadget
+* _class | The combination CLASS.FIELD (note the dot) to read from the info in case of list
+]
+
+End Rem
+Function AddGadgetItems:Int(gadget:tgadget,obj:Object=Null,sel:Int=-1,_class:String="")
+	If gadget=Null Return -1
+	If obj=Null Return -1
+	Local _className:String,_classField:String
+	If _class<>""
+		If _class.contains(".")=False _class=_class+"."'security
+		_className:String=_class.split(".")[0]
+		_classField:String=_class.split(".")[1]
+	End If
+	
+	Local tmp:Object
+	
+	If obj=String[](obj)
+		For Local s:String=EachIn String[](obj)
+			gadget.InsertItem(gadget.ItemCount(),s,s,-1,Null,0)
+		Next
+	End If
+
+	If obj=TList(obj)
+			If _class=""
+				For Local s:String=EachIn TList(obj)
+				gadget.InsertItem(gadget.ItemCount(),s,s,-1,Null,0)		
+				Next
+			Else	'use reflection
+				For Local s:Object=EachIn TList(obj)
+					Local id:TTypeId=TTypeId.ForObject(s )
+					For Local fld:TField=EachIn id.EnumFields()
+						If fld.name()=_classField	
+						Local gg:String=fld.getstring(s)
+						gadget.InsertItem(gadget.ItemCount(),gg,gg,-1,s,0)	
+						End If
+					Next	
+				Next
+			End If
+	End If
+	
+	If obj=TMap(obj)
+			For Local s:String=EachIn MapKeys(TMap(obj))
+			tmp=MapValueForKey(TMap(obj),s)
+			gadget.InsertItem(gadget.ItemCount(),s,s,-1,tmp,0)
+			Next
+	End If
+	If sel<>-1 gadget.SelectItem(sel,1)
+End Function
+
+
 
 ' Localization Handling
 
